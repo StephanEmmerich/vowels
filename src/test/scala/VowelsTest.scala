@@ -6,8 +6,12 @@ class VowelsTest extends AnyFlatSpec {
     assertResult(0)(Result.longestVowelSubsequence(""))
   }
 
-  "aeiou" should "be 6" in {
+  "aeiou" should "be 5" in {
     assertResult(5)(Result.longestVowelSubsequence("aeiou"))
+  }
+
+  "aeiouaeiou" should "be 6 (aeiouu)" in {
+    assertResult(6)(Result.longestVowelSubsequence("aeiouaeiou"))
   }
 
   "aeiiiaaiiiiaaaaaiiiiiiooooooaaaoooouuuuueeeuuuuuuuuuu" should "be 40" in {

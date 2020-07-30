@@ -43,20 +43,21 @@ object Result {
    */
 
   def longestVowelSubsequence(s: String): Int = {
-    val results: ArrayBuffer[List[String]] = new ArrayBuffer[List[String]]()
+    val results: ArrayBuffer[String] = new ArrayBuffer[String]()
     for (i <- 0 to (s.length - 1)) {
       if (s(i).toString == AState().value) {
         results.append(vowelOf(s.substring(i)))
       }
     }
+
     results
-      .flatten
+      .filter(_.endsWith(UState().value))
       .map(_.size)
       .maxOption
       .getOrElse(0)
   }
 
-  private def vowelOf(part: String): List[String] = {
+  private def vowelOf(part: String): String = {
     def traverseString(part: String, currentState: State): String = {
       part.headOption match {
         case Some(letter) if currentState.shouldAddLetter(letter) && !part.tail.isEmpty => letter.toString ++ traverseString(part.tail, currentState.nextState(letter))
@@ -66,9 +67,7 @@ object Result {
       }
     }
 
-    val parsedPart = traverseString(part, AState())
-    if (parsedPart.endsWith(UState().value)) List(parsedPart)
-    else Nil
+    traverseString(part, AState())
   }
 }
 
