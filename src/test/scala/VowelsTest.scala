@@ -6,6 +6,18 @@ class VowelsTest extends AnyFlatSpec {
     assertResult(0)(Result.longestVowelSubsequence(""))
   }
 
+  "a" should "be 0" in {
+    assertResult(0)(Result.longestVowelSubsequence("a"))
+  }
+
+  "ea" should "be 0" in {
+    assertResult(0)(Result.longestVowelSubsequence("ea"))
+  }
+
+  "aeaeaeaaa" should "be 0" in {
+    assertResult(0)(Result.longestVowelSubsequence("aeaeaeaaa"))
+  }
+
   "aeiou" should "be 5" in {
     assertResult(5)(Result.longestVowelSubsequence("aeiou"))
   }

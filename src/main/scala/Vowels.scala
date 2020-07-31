@@ -1,9 +1,12 @@
 import java.io.PrintWriter
 
-import scala.collection.mutable.ArrayBuffer
 import scala.io.StdIn
 
 object Result {
+
+  val NumberOfVowels = 5
+  val ZeroLength = 0
+  val StartIndex = 0
 
   sealed trait State {
     val value: String
@@ -43,18 +46,30 @@ object Result {
    */
 
   def longestVowelSubsequence(s: String): Int = {
-    val results: ArrayBuffer[String] = new ArrayBuffer[String]()
-    for (i <- 0 to (s.length - 1)) {
-      if (s(i).toString == AState().value) {
-        results.append(vowelOf(s.substring(i)))
-      }
+    if (s.length < NumberOfVowels) ZeroLength
+    else {
+      (StartIndex until s.length)
+        .sliding(2)
+        .map(toTuples => (toTuples.head, toTuples.tail.head))
+        .flatMap(tuple => tuple match {
+          case _ if stringStartsWithAnA(tuple._1, s) => List(StartIndex)
+          case _ if newStartOfA(tuple, s) => List(tuple._2)
+          case _ => Nil
+        })
+        .map(indices => vowelOf(s.substring(indices)))
+        .filter(_.endsWith(UState().value))
+        .map(_.size)
+        .maxOption
+        .getOrElse(ZeroLength)
     }
+  }
 
-    results
-      .filter(_.endsWith(UState().value))
-      .map(_.size)
-      .maxOption
-      .getOrElse(0)
+  private def stringStartsWithAnA(index: Int, s: String): Boolean = {
+    index == 0 && s.charAt(index).toString == AState().value
+  }
+
+  private def newStartOfA(indices: (Int, Int), s: String): Boolean = {
+    s.charAt(indices._1).toString != AState().value && s.charAt(indices._2).toString == AState().value
   }
 
   private def vowelOf(part: String): String = {
