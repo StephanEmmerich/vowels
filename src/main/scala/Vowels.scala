@@ -7,32 +7,32 @@ object Result {
 
   sealed trait State {
     val value: String
-    val nextState: State
+    val nextState: Option[State]
 
     def shouldAddLetter(letter: Char): Boolean = {
-      letter.toString == value || nextState.value == letter.toString
+      letter.toString == value || nextState.map(_.value == letter.toString).getOrElse(false)
     }
 
     def nextState(letter: Char): State = {
-      letter match {
-        case nothing if nextState == null => Stop()
-        case next if nextState.value == letter.toString => nextState
-        case _ => this
-      }
+      nextState
+        .map(ns =>
+          if (ns.value == letter.toString) ns
+          else this)
+        .getOrElse(Stop())
     }
   }
 
-  case class Stop(value: String = "NONE", nextState: State = null) extends State
+  case class Stop(value: String = "NONE", nextState: Option[State] = None) extends State
 
-  case class UState(value: String = "u", nextState: State = Stop()) extends State
+  case class UState(value: String = "u", nextState: Option[State] = Some(Stop())) extends State
 
-  case class OState(value: String = "o", nextState: State = UState()) extends State
+  case class OState(value: String = "o", nextState: Option[State] = Some(UState())) extends State
 
-  case class IState(value: String = "i", nextState: State = OState()) extends State
+  case class IState(value: String = "i", nextState: Option[State] = Some(OState())) extends State
 
-  case class EState(value: String = "e", nextState: State = IState()) extends State
+  case class EState(value: String = "e", nextState: Option[State] = Some(IState())) extends State
 
-  case class AState(value: String = "a", nextState: State = EState()) extends State
+  case class AState(value: String = "a", nextState: Option[State] = Some(EState())) extends State
 
 
   /*
