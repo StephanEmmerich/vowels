@@ -5,18 +5,20 @@ import scala.io.StdIn
 object Result {
 
   val NumberOfVowels = 5
+  val AsPair = 2
   val ZeroLength = 0
   val StartIndex = 0
+  val EmptyString = ""
 
-  sealed trait State {
+  sealed trait VowelState {
     val value: String
-    val nextState: Option[State]
+    val nextState: Option[VowelState]
 
     def shouldAddLetter(letter: Char): Boolean = {
       letter.toString == value || nextState.map(_.value == letter.toString).getOrElse(false)
     }
 
-    def nextState(letter: Char): State = {
+    def nextState(letter: Char): VowelState = {
       nextState
         .map(ns =>
           if (ns.value == letter.toString) ns
@@ -25,17 +27,17 @@ object Result {
     }
   }
 
-  case class Stop(value: String = "NONE", nextState: Option[State] = None) extends State
+  case class Stop(value: String = "NONE", nextState: Option[VowelState] = None) extends VowelState
 
-  case class UState(value: String = "u", nextState: Option[State] = Some(Stop())) extends State
+  case class UState(value: String = "u", nextState: Option[VowelState] = Some(Stop())) extends VowelState
 
-  case class OState(value: String = "o", nextState: Option[State] = Some(UState())) extends State
+  case class OState(value: String = "o", nextState: Option[VowelState] = Some(UState())) extends VowelState
 
-  case class IState(value: String = "i", nextState: Option[State] = Some(OState())) extends State
+  case class IState(value: String = "i", nextState: Option[VowelState] = Some(OState())) extends VowelState
 
-  case class EState(value: String = "e", nextState: Option[State] = Some(IState())) extends State
+  case class EState(value: String = "e", nextState: Option[VowelState] = Some(IState())) extends VowelState
 
-  case class AState(value: String = "a", nextState: Option[State] = Some(EState())) extends State
+  case class AState(value: String = "a", nextState: Option[VowelState] = Some(EState())) extends VowelState
 
 
   /*
@@ -49,7 +51,7 @@ object Result {
     if (s.length < NumberOfVowels) ZeroLength
     else {
       (StartIndex until s.length)
-        .sliding(2)
+        .sliding(AsPair)
         .map(toTuples => (toTuples.head, toTuples.tail.head))
         .flatMap(tuple => tuple match {
           case _ if stringStartsWithAnA(tuple._1, s) => List(StartIndex)
@@ -65,7 +67,7 @@ object Result {
   }
 
   private def stringStartsWithAnA(index: Int, s: String): Boolean = {
-    index == 0 && s.charAt(index).toString == AState().value
+    index == StartIndex && s.charAt(index).toString == AState().value
   }
 
   private def newStartOfA(indices: (Int, Int), s: String): Boolean = {
@@ -73,12 +75,12 @@ object Result {
   }
 
   private def vowelOf(part: String): String = {
-    def traverseString(part: String, currentState: State): String = {
+    def traverseString(part: String, currentState: VowelState): String = {
       part.headOption match {
         case Some(letter) if currentState.shouldAddLetter(letter) && !part.tail.isEmpty => letter.toString ++ traverseString(part.tail, currentState.nextState(letter))
         case Some(letter) if currentState.shouldAddLetter(letter) => letter.toString
         case Some(letter) => traverseString(part.tail, currentState.nextState(letter))
-        case None => ""
+        case None => EmptyString
       }
     }
 
