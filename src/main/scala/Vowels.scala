@@ -23,22 +23,52 @@ object Result {
         .map(ns =>
           if (ns.value == letter.toString) ns
           else this)
-        .getOrElse(Stop())
+        .getOrElse(Stop)
     }
   }
 
-  case class Stop(value: String = "NONE", nextState: Option[VowelState] = None) extends VowelState
+  case object Stop extends VowelState {
+    override val value: String = "NONE"
+    override val nextState: Option[VowelState] = None
+  }
 
-  case class UState(value: String = "u", nextState: Option[VowelState] = Some(Stop())) extends VowelState
+  case object UState extends VowelState {
+    override val value: String = "u"
+    override val nextState: Option[VowelState] = Some(Stop)
+  }
 
-  case class OState(value: String = "o", nextState: Option[VowelState] = Some(UState())) extends VowelState
+  case object OState extends VowelState {
+    override val value: String = "o"
+    override val nextState: Option[VowelState] = Some(UState)
+  }
 
-  case class IState(value: String = "i", nextState: Option[VowelState] = Some(OState())) extends VowelState
+  case object IState extends VowelState {
+    override val value: String = "i"
+    override val nextState: Option[VowelState] = Some(OState)
+  }
 
-  case class EState(value: String = "e", nextState: Option[VowelState] = Some(IState())) extends VowelState
+  case object EState extends VowelState {
+    override val value: String = "e"
+    override val nextState: Option[VowelState] = Some(IState)
+  }
 
-  case class AState(value: String = "a", nextState: Option[VowelState] = Some(EState())) extends VowelState
+  case object AState extends VowelState {
+    override val value: String = "a"
+    override val nextState: Option[VowelState] = Some(EState)
+  }
 
+  case class OrderedVowels(vowels: String = "", currentState: VowelState = AState) {
+
+    lazy val endsWithUState = currentState == UState
+
+    def mapCharacter(vowel: Char): OrderedVowels = {
+      vowel match {
+        case _ if currentState.shouldAddLetter(vowel) => OrderedVowels(vowels + vowel, currentState.nextState(vowel))
+        case _ => OrderedVowels(vowels, currentState.nextState(vowel))
+      }
+    }
+
+  }
 
   /*
    * Complete the 'longestVowelSubsequence' function below.
@@ -53,38 +83,33 @@ object Result {
       (StartIndex until s.length)
         .sliding(AsPair)
         .map(toTuples => (toTuples.head, toTuples.tail.head))
-        .flatMap(tuple => tuple match {
-          case _ if stringStartsWithAnA(tuple._1, s) => List(StartIndex)
-          case _ if newStartOfA(tuple, s) => List(tuple._2)
-          case _ => Nil
-        })
-        .map(indices => vowelOf(s.substring(indices)))
-        .filter(_.endsWith(UState().value))
-        .map(_.size)
+        .flatMap(tuple => findAllStartIndicesForVowelCount(tuple, s))
+        .map(startIndex => vowelOf(s.substring(startIndex)))
+        .filter(_.endsWithUState)
+        .map(_.vowels.size)
         .maxOption
         .getOrElse(ZeroLength)
     }
   }
 
+  private def findAllStartIndicesForVowelCount(tuple: (Int, Int), s: String): List[Int] = {
+    tuple match {
+      case _ if stringStartsWithAnA(tuple._1, s) => List(StartIndex)
+      case _ if newStartOfA(tuple, s) => List(tuple._2)
+      case _ => Nil
+    }
+  }
+
   private def stringStartsWithAnA(index: Int, s: String): Boolean = {
-    index == StartIndex && s.charAt(index).toString == AState().value
+    index == StartIndex && s.charAt(index).toString == AState.value
   }
 
   private def newStartOfA(indices: (Int, Int), s: String): Boolean = {
-    s.charAt(indices._1).toString != AState().value && s.charAt(indices._2).toString == AState().value
+    s.charAt(indices._1).toString != AState.value && s.charAt(indices._2).toString == AState.value
   }
 
-  private def vowelOf(part: String): String = {
-    def traverseString(part: String, currentState: VowelState): String = {
-      part.headOption match {
-        case Some(letter) if currentState.shouldAddLetter(letter) && !part.tail.isEmpty => letter.toString ++ traverseString(part.tail, currentState.nextState(letter))
-        case Some(letter) if currentState.shouldAddLetter(letter) => letter.toString
-        case Some(letter) => traverseString(part.tail, currentState.nextState(letter))
-        case None => EmptyString
-      }
-    }
-
-    traverseString(part, AState())
+  private def vowelOf(part: String): OrderedVowels = {
+    part.foldLeft(OrderedVowels())((orderedVowels, letter) => orderedVowels.mapCharacter(letter))
   }
 }
 
